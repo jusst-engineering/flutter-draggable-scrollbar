@@ -16,6 +16,9 @@ typedef Widget ScrollThumbBuilder(
 /// Build a Text widget using the current scroll offset
 typedef Text LabelTextBuilder(double offsetY);
 
+/// Positions the ScrollBar can be placed at
+enum ScrollBarPosition { left, right }
+
 /// A widget that will display a BoxScrollView with a ScrollThumb that can be dragged
 /// for quick navigation of the BoxScrollView.
 class DraggableScrollbar extends StatefulWidget {
@@ -49,11 +52,15 @@ class DraggableScrollbar extends StatefulWidget {
   /// The ScrollController for the BoxScrollView
   final ScrollController controller;
 
+  /// The position t which the scollThumb is displaying
+  final ScrollBarPosition position;
+
   /// Determines scrollThumb displaying. If you draw own ScrollThumb and it is true you just don't need to use animation parameters in [scrollThumbBuilder]
   final bool alwaysVisibleScrollThumb;
 
   DraggableScrollbar({
     Key key,
+    this.position = ScrollBarPosition.right,
     this.alwaysVisibleScrollThumb = false,
     @required this.heightScrollThumb,
     @required this.backgroundColor,
@@ -73,6 +80,7 @@ class DraggableScrollbar extends StatefulWidget {
   DraggableScrollbar.rrect({
     Key key,
     Key scrollThumbKey,
+    this.position = ScrollBarPosition.right,
     this.alwaysVisibleScrollThumb = false,
     @required this.child,
     @required this.controller,
@@ -91,6 +99,7 @@ class DraggableScrollbar extends StatefulWidget {
   DraggableScrollbar.arrows({
     Key key,
     Key scrollThumbKey,
+    this.position = ScrollBarPosition.right,
     this.alwaysVisibleScrollThumb = false,
     @required this.child,
     @required this.controller,
@@ -109,6 +118,7 @@ class DraggableScrollbar extends StatefulWidget {
   DraggableScrollbar.semicircle({
     Key key,
     Key scrollThumbKey,
+    this.position = ScrollBarPosition.right,
     this.alwaysVisibleScrollThumb = false,
     @required this.child,
     @required this.controller,
@@ -392,7 +402,9 @@ class _DraggableScrollbarState extends State<DraggableScrollbar>
               onVerticalDragUpdate: _onVerticalDragUpdate,
               onVerticalDragEnd: _onVerticalDragEnd,
               child: Container(
-                alignment: Alignment.topRight,
+                alignment: widget.position == ScrollBarPosition.left
+                    ? Alignment.topLeft
+                    : Alignment.topRight,
                 margin: EdgeInsets.only(top: _barOffset),
                 padding: widget.padding,
                 child: widget.scrollThumbBuilder(
