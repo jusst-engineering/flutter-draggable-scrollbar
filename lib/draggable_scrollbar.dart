@@ -161,9 +161,6 @@ class DraggableScrollbar extends StatefulWidget {
             ],
           );
 
-    if (alwaysVisibleScrollThumb) {
-      return scrollThumbAndLabel;
-    }
     return SlideFadeTransition(
       animation: thumbAnimation,
       child: scrollThumbAndLabel,
@@ -356,6 +353,15 @@ class _DraggableScrollbarState extends State<DraggableScrollbar>
       parent: _labelAnimationController,
       curve: Curves.fastOutSlowIn,
     );
+
+    widget.controller.addListener(() {
+      setState(() {
+        if (viewMaxScrollExtent != viewMinScrollExtent)
+          _thumbAnimationController.forward();
+        else
+          _thumbAnimationController.reverse();
+      });
+    });
   }
 
   @override
@@ -376,6 +382,12 @@ class _DraggableScrollbarState extends State<DraggableScrollbar>
 
   @override
   Widget build(BuildContext context) {
+    // Nasty hack to get initial scrollbar display right
+    Timer(Duration(milliseconds: 500), () {
+      if (viewMaxScrollExtent != viewMinScrollExtent)
+        _thumbAnimationController.forward();
+    });
+
     Widget labelText;
     if (widget.labelTextBuilder != null && _isDragInProcess) {
       labelText = widget.labelTextBuilder(
@@ -461,12 +473,14 @@ class _DraggableScrollbarState extends State<DraggableScrollbar>
           _thumbAnimationController.forward();
         }
 
-        _fadeoutTimer?.cancel();
-        _fadeoutTimer = Timer(widget.scrollbarTimeToFade, () {
-          _thumbAnimationController.reverse();
-          _labelAnimationController.reverse();
-          _fadeoutTimer = null;
-        });
+        if (!widget.alwaysVisibleScrollThumb) {
+          _fadeoutTimer?.cancel();
+          _fadeoutTimer = Timer(widget.scrollbarTimeToFade, () {
+            _thumbAnimationController.reverse();
+            _labelAnimationController.reverse();
+            _fadeoutTimer = null;
+          });
+        }
       }
     });
   }
@@ -526,11 +540,13 @@ class _DraggableScrollbarState extends State<DraggableScrollbar>
   }
 
   void _onVerticalDragEnd(DragEndDetails details) {
-    _fadeoutTimer = Timer(widget.scrollbarTimeToFade, () {
-      _thumbAnimationController.reverse();
-      _labelAnimationController.reverse();
-      _fadeoutTimer = null;
-    });
+    if (!widget.alwaysVisibleScrollThumb) {
+      _fadeoutTimer = Timer(widget.scrollbarTimeToFade, () {
+        _thumbAnimationController.reverse();
+        _labelAnimationController.reverse();
+        _fadeoutTimer = null;
+      });
+    }
     setState(() {
       _isDragInProcess = false;
     });
